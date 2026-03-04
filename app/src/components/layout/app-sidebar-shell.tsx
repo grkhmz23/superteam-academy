@@ -126,16 +126,15 @@ export function AppSidebarShell({ children }: { children: React.ReactNode }) {
                 href="/"
                 className={cn("flex items-center gap-2 py-1", open ? "justify-start" : "justify-center")}
               >
-                <Image
-                  src="/superteam-academy-mark.svg"
-                  alt={tc("appName")}
-                  width={132}
-                  height={24}
+                <span
                   className={cn(
-                    "h-6 flex-shrink-0 object-contain transition-all duration-200",
-                    open ? "w-auto" : "w-6"
+                    "text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground transition-all duration-200",
+                    open ? "w-auto opacity-100" : "w-0 opacity-0"
                   )}
-                />
+                >
+                  SuperTeam Academy
+                </span>
+                {!open ? <Compass className="h-5 w-5 flex-shrink-0 text-foreground" /> : null}
               </Link>
               {open ? (
                 <>

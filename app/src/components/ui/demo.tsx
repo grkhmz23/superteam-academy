@@ -93,19 +93,12 @@ export const Logo = () => {
       href="/"
       className="font-normal flex space-x-2 items-center text-sm text-black dark:text-white py-1 relative z-20"
     >
-      <Image
-        src="/superteam-academy-mark.svg"
-        alt="Superteam Academy"
-        width={132}
-        height={24}
-        className="h-6 w-auto flex-shrink-0"
-      />
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-medium whitespace-pre"
+        className="font-medium whitespace-pre uppercase tracking-[0.2em]"
       >
-        Superteam Academy
+        SuperTeam Academy
       </motion.span>
     </Link>
   );

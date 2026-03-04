@@ -14,11 +14,6 @@ export const metadata: Metadata = {
     description: "Interactive Solana Developer Education Platform",
     type: "website",
   },
-  icons: {
-    icon: "/superteam-academy-mark.svg",
-    shortcut: "/superteam-academy-mark.svg",
-    apple: "/superteam-academy-mark.svg",
-  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

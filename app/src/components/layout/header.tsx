@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, X, LogOut, User, Settings, LayoutDashboard, Globe, Terminal } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { localeOptions } from "@/lib/i18n/locales";
@@ -64,14 +63,9 @@ export function Header() {
           <Link href="/" className="flex items-center ltr-isolate group">
             <div className="relative">
               <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-primary/50 to-purple-500/50 opacity-0 blur transition duration-500 group-hover:opacity-30" />
-              <Image
-                src="/superteam-academy-mark.svg"
-                alt={tc("appName")}
-                width={170}
-                height={44}
-                priority
-                className="relative h-9 w-auto transition-transform duration-300 group-hover:scale-[1.02]"
-              />
+              <span className="relative block text-sm font-semibold uppercase tracking-[0.2em] text-foreground transition-transform duration-300 group-hover:scale-[1.02]">
+                SuperTeam Academy
+              </span>
             </div>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
