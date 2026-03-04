@@ -32,6 +32,7 @@ const componentMessages = {
     new: "New",
   },
   actions: {
+    useExample: "Use example",
     openInPlayground: "Open in Playground",
     copyInstall: "Copy install",
     backToCatalog: "Back to catalog",
@@ -42,6 +43,7 @@ const componentMessages = {
   },
   sections: {
     preview: "Preview",
+    workbench: "Workbench",
     code: "Code",
     install: "Install",
     props: "Props",

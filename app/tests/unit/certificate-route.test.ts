@@ -67,7 +67,7 @@ describe("/api/certificates/[id] GET", () => {
     const { GET } = await import("@/app/api/certificates/[id]/route");
     const res = await GET(
       new NextRequest("http://localhost/api/certificates/cert_public123"),
-      { params: { id: "cert_public123" } }
+      { params: Promise.resolve({ id: "cert_public123" }) }
     );
     const body = (await res.json()) as {
       certificate: {
@@ -96,7 +96,7 @@ describe("/api/certificates/[id] GET", () => {
     const { GET } = await import("@/app/api/certificates/[id]/route");
     const res = await GET(
       new NextRequest("http://localhost/api/certificates/cert_missing"),
-      { params: { id: "cert_missing" } }
+      { params: Promise.resolve({ id: "cert_missing" }) }
     );
 
     expect(res.status).toBe(404);
@@ -144,7 +144,7 @@ describe("/api/certificates/[id] GET", () => {
     const { GET } = await import("@/app/api/certificates/[id]/route");
     const res = await GET(
       new NextRequest("http://localhost/api/certificates/solana-fundamentals"),
-      { params: { id: "solana-fundamentals" } }
+      { params: Promise.resolve({ id: "solana-fundamentals" }) }
     );
     const body = (await res.json()) as {
       certificate: {

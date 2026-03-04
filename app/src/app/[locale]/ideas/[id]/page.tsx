@@ -87,11 +87,7 @@ function mapIdea(idea: ApiIdea): PageIdea {
 
 const mockUserSkills = ["React", "TypeScript", "Rust", "Anchor"];
 
-export default function IdeaDetailPage({
-  params: { locale },
-}: {
-  params: { locale: string };
-}) {
+export default function IdeaDetailPage() {
   const t = useTranslations("common");
   const tIdeas = useTranslations("ideas");
   const { id } = useParams();

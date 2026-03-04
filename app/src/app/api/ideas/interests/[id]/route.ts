@@ -9,9 +9,9 @@ import { Errors, handleApiError } from '@/lib/api/errors';
 export const dynamic = 'force-dynamic';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const UpdateInterestSchema = z.object({
@@ -32,7 +32,7 @@ export async function PATCH(
       throw Errors.unauthorized('Unauthorized');
     }
 
-    const { id: interestId } = params;
+    const { id: interestId } = await params;
     const userId = session.user.id;
 
     // Get the interest record with idea info

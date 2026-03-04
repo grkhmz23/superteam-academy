@@ -13,10 +13,10 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(
   request: Request,
-  { params }: { params: { courseSlug: string } }
+  { params }: { params: Promise<{ courseSlug: string }> }
 ): Promise<Response> {
   const requestId = generateRequestId();
-  const { courseSlug } = params;
+  const { courseSlug } = await params;
   
   try {
     // Check authentication

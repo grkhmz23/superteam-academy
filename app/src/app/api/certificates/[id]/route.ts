@@ -13,7 +13,7 @@ import { getCredentials } from "@/lib/services/onchain";
 import { Errors, handleApiError } from "@/lib/api/errors";
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function GET(
@@ -21,7 +21,8 @@ export async function GET(
   { params }: RouteContext
 ): Promise<NextResponse> {
   try {
-    const certificateId = params.id?.trim();
+    const { id } = await params;
+    const certificateId = id?.trim();
     if (!certificateId) {
       throw Errors.badRequest("Invalid certificate id");
     }

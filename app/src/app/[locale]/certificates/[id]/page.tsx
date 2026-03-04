@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
 import { Link } from "@/lib/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,9 +35,11 @@ interface VerificationResult {
   heliusAvailable: boolean;
 }
 
-export default function CertificatePage({ params }: { params: { id: string } }) {
+export default function CertificatePage() {
   const { data: session } = useSession();
   const locale = useLocale();
+  const params = useParams<{ id: string }>();
+  const certificateId = params.id;
   const t = useTranslations("certificate");
   const [certificate, setCertificate] = useState<Certificate | null>(null);
   const [verification, setVerification] = useState<{ valid: boolean; owner: string | null } | null>(null);
@@ -56,7 +59,7 @@ export default function CertificatePage({ params }: { params: { id: string } }) 
   useEffect(() => {
     async function fetchCertificate() {
       try {
-        const response = await fetch(`/api/certificates/${encodeURIComponent(params.id)}`);
+        const response = await fetch(`/api/certificates/${encodeURIComponent(certificateId)}`);
         if (response.ok) {
           const data = (await response.json()) as {
             certificate: Certificate;
@@ -65,7 +68,7 @@ export default function CertificatePage({ params }: { params: { id: string } }) 
           setCertificate(data.certificate);
           setVerification(data.verification);
 
-          if (data.certificate.id !== params.id) {
+          if (data.certificate.id !== certificateId) {
             window.history.replaceState(
               window.history.state,
               "",
@@ -124,13 +127,13 @@ export default function CertificatePage({ params }: { params: { id: string } }) 
     }
 
     void fetchCertificate();
-  }, [locale, params.id, t]);
+  }, [certificateId, locale, t]);
 
   const handleShare = useCallback(async () => {
     if (!certificate) return;
 
     // Track certificate share
-    trackEvent("share_certificate", "certificates", params.id);
+    trackEvent("share_certificate", "certificates", certificateId);
 
     const text = t("shareText", { course: certificate.courseName });
     const url = window.location.href;
@@ -146,7 +149,7 @@ export default function CertificatePage({ params }: { params: { id: string } }) 
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [certificate, params.id, t]);
+  }, [certificate, certificateId, t]);
 
   const handleCopyMint = useCallback(async () => {
     const mintAddress = credential?.mintAddress || certificate?.credentialMint;

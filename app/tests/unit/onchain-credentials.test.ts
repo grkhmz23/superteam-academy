@@ -13,7 +13,7 @@ describe("On-Chain Credentials Service", () => {
   });
 
   describe("getCredentials", () => {
-    const validWallet = "H6f4Q8z2K3mN7pQrStUvWxYz123456789AbCdEfGh";
+    const validWallet = "11111111111111111111111111111111";
 
     it("should return empty array when HELIUS_API_KEY is not set", async () => {
       delete process.env.HELIUS_API_KEY;
@@ -63,7 +63,7 @@ describe("On-Chain Credentials Service", () => {
         isValidWalletAddress("So11111111111111111111111111111111111111112")
       ).toBe(true);
       expect(
-        isValidWalletAddress("H6f4Q8z2K3mN7pQrStUvWxYz123456789AbCdEfGh")
+        isValidWalletAddress("ACADBRCB3zGvo1KSCbkztS33ZNzeBv2d7bqGceti3ucf")
       ).toBe(true);
 
       // Invalid addresses

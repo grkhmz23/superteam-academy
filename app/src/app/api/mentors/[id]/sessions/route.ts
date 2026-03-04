@@ -7,9 +7,9 @@ import { Errors, handleApiError } from '@/lib/api/errors';
 export const dynamic = 'force-dynamic';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 /**
@@ -26,7 +26,7 @@ export async function GET(
       throw Errors.unauthorized('Unauthorized');
     }
 
-    const { id: mentorId } = params;
+    const { id: mentorId } = await params;
 
     // Check if mentor exists
     const mentor = await mentorshipService.getMentorById(mentorId);

@@ -8,11 +8,11 @@ import LessonPageClient, {
 } from "@/components/lessons/LessonPageClient";
 
 interface LessonPageProps {
-  params: {
+  params: Promise<{
     locale: string;
     slug: string;
     id: string;
-  };
+  }>;
 }
 
 function toChallenge(lesson: Lesson): Challenge | undefined {
@@ -82,17 +82,18 @@ function buildLessonPayload(
 }
 
 export default async function LessonPage({ params }: LessonPageProps) {
-  const locale: Locale = locales.includes(params.locale as Locale)
-    ? (params.locale as Locale)
+  const { locale: rawLocale, slug, id } = await params;
+  const locale: Locale = locales.includes(rawLocale as Locale)
+    ? (rawLocale as Locale)
     : defaultLocale;
   const service = getContentService();
-  const course = await service.getCourse(params.slug, locale);
+  const course = await service.getCourse(slug, locale);
 
   if (!course) {
     notFound();
   }
 
-  const lesson = await service.getLesson(params.slug, params.id, locale);
+  const lesson = await service.getLesson(slug, id, locale);
   if (!lesson) {
     notFound();
   }
@@ -105,5 +106,5 @@ export default async function LessonPage({ params }: LessonPageProps) {
     lesson
   );
 
-  return <LessonPageClient slug={params.slug} initialData={initialData} />;
+  return <LessonPageClient slug={slug} initialData={initialData} />;
 }

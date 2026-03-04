@@ -5,7 +5,7 @@ import { getCredentials } from "@/lib/services/onchain";
 import { Errors, handleApiError } from "@/lib/api/errors";
 
 interface RouteContext {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }
 
 export async function GET(
@@ -13,9 +13,10 @@ export async function GET(
   { params }: RouteContext
 ): Promise<NextResponse> {
   try {
+    const { username } = await params;
     const user = await prisma.user.findFirst({
       where: {
-        username: params.username,
+        username,
         isPublic: true,
       },
       select: {

@@ -40,7 +40,7 @@ const expertiseOptions = [
 
 const languageOptions = ["English", "Spanish", "Portuguese", "Chinese", "Japanese", "Korean", "Russian", "German", "French"];
 
-export default function BecomeMentorPage({ params: { locale } }: { params: { locale: string } }) {
+export default function BecomeMentorPage() {
   const t = useTranslations("common");
   const tMentors = useTranslations("mentors");
   const router = useRouter();

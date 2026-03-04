@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +21,11 @@ interface PublicProfile {
   credentials: Credential[];
 }
 
-export default function PublicProfilePage({ params }: { params: { username: string } }) {
+export default function PublicProfilePage() {
   const t = useTranslations("profile");
   const tc = useTranslations("common");
+  const params = useParams<{ username: string }>();
+  const username = params.username;
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -30,7 +33,7 @@ export default function PublicProfilePage({ params }: { params: { username: stri
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const response = await fetch(`/api/profile/${encodeURIComponent(params.username)}`);
+        const response = await fetch(`/api/profile/${encodeURIComponent(username)}`);
         if (response.status === 404) {
           setNotFound(true);
           return;
@@ -46,7 +49,7 @@ export default function PublicProfilePage({ params }: { params: { username: stri
       }
     }
     void fetchProfile();
-  }, [params.username]);
+  }, [username]);
 
   if (isLoading) {
     return (

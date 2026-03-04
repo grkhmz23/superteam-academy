@@ -8,9 +8,9 @@ import { Errors, handleApiError } from '@/lib/api/errors';
 export const dynamic = 'force-dynamic';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const TimeSlotSchema = z.object({
@@ -36,7 +36,7 @@ export async function GET(
   { params }: RouteParams
 ): Promise<Response> {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const mentor = await mentorshipService.getMentorById(id);
 
@@ -64,7 +64,7 @@ export async function PATCH(
       throw Errors.unauthorized('Unauthorized');
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Check if mentor exists
     const existingMentor = await mentorshipService.getMentorById(id);

@@ -16,14 +16,15 @@ import { Toaster } from "@/components/ui/sonner";
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-export async function generateMetadata({ params: { locale } }: LocaleLayoutProps) {
+export async function generateMetadata({ params }: LocaleLayoutProps) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "common" });
   const appName = t("appName");
   const description = t("tagline");
@@ -38,7 +39,8 @@ export async function generateMetadata({ params: { locale } }: LocaleLayoutProps
   };
 }
 
-export default async function LocaleLayout({ children, params: { locale } }: LocaleLayoutProps) {
+export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
+  const { locale } = await params;
   if (!locales.includes(locale as Locale)) notFound();
   const typedLocale = locale as Locale;
 

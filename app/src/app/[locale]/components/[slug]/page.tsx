@@ -2,16 +2,17 @@ import { notFound } from "next/navigation";
 import { ComponentDetail } from "@/components/solana/ComponentDetail";
 import { getComponentById } from "@/lib/component-hub/registry";
 
-export default function ComponentDetailPage({
+export default async function ComponentDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const component = getComponentById(params.slug);
+  const { slug } = await params;
+  const component = getComponentById(slug);
 
   if (!component) {
     notFound();
   }
 
-  return <ComponentDetail componentId={params.slug} />;
+  return <ComponentDetail componentId={slug} />;
 }

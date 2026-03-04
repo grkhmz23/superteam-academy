@@ -9,9 +9,9 @@ import { Errors, handleApiError } from '@/lib/api/errors';
 export const dynamic = 'force-dynamic';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const ApplySchema = z.object({
@@ -32,7 +32,7 @@ export async function POST(
       throw Errors.unauthorized('Unauthorized');
     }
 
-    const { id: jobId } = params;
+    const { id: jobId } = await params;
     const userId = session.user.id;
 
     // Check if job exists and is active

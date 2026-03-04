@@ -8,9 +8,9 @@ import { Errors, handleApiError } from '@/lib/api/errors';
 export const dynamic = 'force-dynamic';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const RateSessionSchema = z.object({
@@ -32,7 +32,7 @@ export async function POST(
       throw Errors.unauthorized('Unauthorized');
     }
 
-    const { id } = params;
+    const { id } = await params;
     const userId = session.user.id;
 
     const mentorshipSession = await mentorshipService.getSessionById(id);

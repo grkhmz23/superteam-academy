@@ -54,7 +54,7 @@ interface JobFormData {
   skills: string[];
 }
 
-export default function NewJobPage({ params: { locale } }: { params: { locale: string } }) {
+export default function NewJobPage() {
   const t = useTranslations("common");
   const tJobs = useTranslations("jobs");
   const router = useRouter();

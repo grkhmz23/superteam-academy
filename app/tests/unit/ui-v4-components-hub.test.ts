@@ -37,8 +37,9 @@ describe("UI V4 components hub", () => {
     const detailSource = readFileSync(resolve("src/app/[locale]/components/[slug]/page.tsx"), "utf8");
     const detailComponentSource = readFileSync(resolve("src/components/solana/ComponentDetail.tsx"), "utf8");
 
-    expect(detailSource).toContain("getComponentById(params.slug)");
-    expect(detailSource).toContain('componentId={params.slug}');
+    expect(detailSource).toContain("const { slug } = await params;");
+    expect(detailSource).toContain("getComponentById(slug)");
+    expect(detailSource).toContain("componentId={slug}");
     expect(detailSource).not.toContain("component={component}");
     expect(detailComponentSource).toContain("getComponentById");
     expect(detailComponentSource).toContain("componentId");

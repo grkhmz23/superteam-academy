@@ -62,11 +62,7 @@ function mapMentor(mentor: ApiMentor): PageMentor {
   };
 }
 
-export default function MentorDetailPage({
-  params: { locale },
-}: {
-  params: { locale: string };
-}) {
+export default function MentorDetailPage() {
   const t = useTranslations("common");
   const tMentors = useTranslations("mentors");
   const { id } = useParams();

@@ -60,7 +60,7 @@ function mapSession(session: ApiSession): Session {
   };
 }
 
-export default function SessionsPage({ params: { locale } }: { params: { locale: string } }) {
+export default function SessionsPage() {
   const t = useTranslations("common");
   const tMentors = useTranslations("mentors");
 

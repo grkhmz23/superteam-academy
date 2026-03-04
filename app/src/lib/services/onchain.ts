@@ -1,5 +1,4 @@
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token";
 import { logger } from "@/lib/logging/logger";
 
 const DEFAULT_XP_MINT = "xpXPUjkfk7t4AJF1tYUoyAYxzuM5DhinZWS1WjfjAu3";
@@ -28,7 +27,13 @@ export function isValidWalletAddress(address: string): boolean {
   if (!base58Regex.test(address)) return false;
   // Length check: Solana pubkeys are 32 bytes = 43-44 base58 chars
   if (address.length < 32 || address.length > 44) return false;
-  return true;
+  try {
+    // Ensure this is a syntactically valid 32-byte pubkey, not just a base58-looking string.
+    new PublicKey(address);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -41,25 +46,24 @@ export async function getOnChainXP(
   try {
     const wallet = new PublicKey(walletAddress);
     const mint = new PublicKey(XP_MINT);
-
-    // Find the Associated Token Account for this wallet + XP mint
-    const ata = await getAssociatedTokenAddress(mint, wallet);
-
-    try {
-      const account = await getAccount(connection, ata);
-      return {
-        balance: Number(account.amount),
-        mintAddress: XP_MINT,
-        tokenAccount: ata.toBase58(),
-      };
-    } catch {
-      // Token account doesn't exist — user has no XP tokens yet
+    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+      wallet,
+      { mint }
+    );
+    const firstAccount = tokenAccounts.value[0];
+    if (!firstAccount) {
       return {
         balance: 0,
         mintAddress: XP_MINT,
         tokenAccount: null,
       };
     }
+    const amount = firstAccount.account.data.parsed.info.tokenAmount.amount;
+    return {
+      balance: Number(amount),
+      mintAddress: XP_MINT,
+      tokenAccount: firstAccount.pubkey.toBase58(),
+    };
   } catch (error) {
     logger.error("Failed to fetch on-chain XP", {
       walletAddress,
@@ -264,7 +268,7 @@ interface HeliusTokenResponse {
  */
 export async function getOnChainLeaderboard(): Promise<OnChainLeaderboardEntry[]> {
   const heliusApiKey = process.env.HELIUS_API_KEY;
-  const xpMint = process.env.NEXT_PUBLIC_XP_MINT_ADDRESS;
+  const xpMint = XP_MINT;
 
   if (!heliusApiKey || !xpMint) {
     return [];

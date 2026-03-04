@@ -24,7 +24,7 @@ interface ProjectFormData {
   repoUrl: string;
 }
 
-export default function NewProjectPage({ params: { locale } }: { params: { locale: string } }) {
+export default function NewProjectPage() {
   const t = useTranslations("common");
   const tProjects = useTranslations("projects");
   const router = useRouter();

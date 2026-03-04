@@ -62,7 +62,7 @@ const skillOptions = [
   "Gaming",
 ];
 
-export default function NewIdeaPage({ params: { locale } }: { params: { locale: string } }) {
+export default function NewIdeaPage() {
   const t = useTranslations("common");
   const tIdeas = useTranslations("ideas");
   const router = useRouter();

@@ -7,9 +7,9 @@ import { Errors, handleApiError } from '@/lib/api/errors';
 export const dynamic = 'force-dynamic';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 /**
@@ -26,7 +26,7 @@ export async function POST(
       throw Errors.unauthorized('Unauthorized');
     }
 
-    const { id: projectId } = params;
+    const { id: projectId } = await params;
     const userId = session.user.id;
 
     // Check if project exists

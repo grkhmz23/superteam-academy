@@ -129,12 +129,13 @@ const nextConfig = {
       "@solana/web3.js",
       "@solana/wallet-adapter-react",
     ],
-    // Enable server components external packages
-    serverComponentsExternalPackages: [
-      "@prisma/client",
-      "prisma",
-    ],
   },
+
+  // Next.js 15+ renamed serverComponentsExternalPackages.
+  serverExternalPackages: [
+    "@prisma/client",
+    "prisma",
+  ],
 
   // Powered by header
   poweredByHeader: false,

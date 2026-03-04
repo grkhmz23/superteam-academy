@@ -19,13 +19,13 @@ describe("On-Chain XP Service", () => {
   describe("isValidWalletAddress", () => {
     it("should return true for valid Solana addresses", () => {
       expect(
-        isValidWalletAddress("H6f4Q8z2K3mN7pQrStUvWxYz123456789AbCdEfGh")
-      ).toBe(true);
-      expect(
         isValidWalletAddress("11111111111111111111111111111111")
       ).toBe(true);
       expect(
         isValidWalletAddress("So11111111111111111111111111111111111111112")
+      ).toBe(true);
+      expect(
+        isValidWalletAddress("ACADBRCB3zGvo1KSCbkztS33ZNzeBv2d7bqGceti3ucf")
       ).toBe(true);
     });
 
@@ -49,35 +49,25 @@ describe("On-Chain XP Service", () => {
   });
 
   describe("getOnChainXP", () => {
-    const validWallet = "H6f4Q8z2K3mN7pQrStUvWxYz123456789AbCdEfGh";
-
-    it("should return null when XP_MINT is not set (program not deployed)", async () => {
-      // XP_MINT should be null from the module if env var is not set
-      const result = await getOnChainXP(validWallet);
-
-      // Since we're not setting NEXT_PUBLIC_XP_MINT_ADDRESS, XP_MINT should be null
-      expect(result).toBeNull();
-    });
-
     it("should return null for invalid wallet address", async () => {
       const result = await getOnChainXP("invalid-address");
 
       expect(result).toBeNull();
     });
 
-    it("should export XP_MINT constant", () => {
-      // XP_MINT should reflect the env var (or be null if not set)
+    it("should export XP_MINT constant with fallback", () => {
+      const expectedDefault = "xpXPUjkfk7t4AJF1tYUoyAYxzuM5DhinZWS1WjfjAu3";
       expect(XP_MINT).toBe(
-        process.env.NEXT_PUBLIC_XP_MINT_ADDRESS || null
+        process.env.NEXT_PUBLIC_XP_MINT_ADDRESS || expectedDefault
       );
     });
   });
 
   describe("XP_MINT configuration", () => {
-    it("should reflect environment variable when set", () => {
-      // Since we can't easily re-import the module, we just verify the current value
-      // matches what we expect from the environment
-      const expectedMint = process.env.NEXT_PUBLIC_XP_MINT_ADDRESS || null;
+    it("should always resolve to env override or default mint", () => {
+      const expectedMint =
+        process.env.NEXT_PUBLIC_XP_MINT_ADDRESS ||
+        "xpXPUjkfk7t4AJF1tYUoyAYxzuM5DhinZWS1WjfjAu3";
       expect(XP_MINT).toBe(expectedMint);
     });
   });

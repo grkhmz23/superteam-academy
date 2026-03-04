@@ -8,9 +8,9 @@ import { Errors, handleApiError } from '@/lib/api/errors';
 export const dynamic = 'force-dynamic';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const BookSessionSchema = z.object({
@@ -33,7 +33,7 @@ export async function POST(
       throw Errors.unauthorized('Unauthorized');
     }
 
-    const { id: mentorId } = params;
+    const { id: mentorId } = await params;
     const menteeId = session.user.id;
 
     // Check if mentor exists

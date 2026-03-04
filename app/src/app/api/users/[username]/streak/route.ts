@@ -17,10 +17,10 @@ interface StreakResponse {
  */
 export async function GET(
   _request: Request,
-  { params }: { params: { username: string } }
+  { params }: { params: Promise<{ username: string }> }
 ): Promise<Response> {
   try {
-    const { username } = params;
+    const { username } = await params;
 
     // Find user by username
     const user = await prisma.user.findUnique({

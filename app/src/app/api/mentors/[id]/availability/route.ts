@@ -6,9 +6,9 @@ import { generateBookableSlots } from "@/lib/mentorship/slots";
 export const dynamic = "force-dynamic";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(
@@ -16,6 +16,7 @@ export async function GET(
   { params }: RouteParams
 ): Promise<Response> {
   try {
+    const { id } = await params;
     const url = new URL(request.url);
     const days = Math.min(30, Math.max(1, Number.parseInt(url.searchParams.get("days") ?? "14", 10)));
     const durationMinutes = Math.min(
@@ -24,7 +25,7 @@ export async function GET(
     );
 
     const mentor = await prisma.mentorProfile.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         availability: true,
@@ -38,7 +39,7 @@ export async function GET(
     const now = new Date();
     const sessions = await prisma.mentorshipSession.findMany({
       where: {
-        mentorId: params.id,
+        mentorId: id,
         status: { in: ["scheduled", "in_progress"] },
         scheduledAt: { gte: now },
       },

@@ -1,6 +1,14 @@
 {
+  "ignorePatterns": ["public/monaco-editor/**"],
   "extends": ["next/core-web-vitals"],
   "overrides": [
+    {
+      "files": ["tests/**/*.{ts,tsx}"],
+      "rules": {
+        "@next/next/no-assign-module-variable": "off",
+        "react/no-children-prop": "off"
+      }
+    },
     {
       "files": ["src/app/api/**/*.ts", "src/lib/**/*.{ts,tsx}"],
       "excludedFiles": [

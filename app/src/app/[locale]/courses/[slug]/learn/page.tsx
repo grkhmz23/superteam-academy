@@ -4,13 +4,14 @@ import { LearnRunner } from "@/components/learn/LearnRunner";
 import { getCourseManifest } from "@/lib/courses/manifest";
 
 interface LearnPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function LearnPage({ params }: LearnPageProps) {
-  const manifest = getCourseManifest(params.slug);
+  const { slug } = await params;
+  const manifest = getCourseManifest(slug);
   if (!manifest) {
     notFound();
   }

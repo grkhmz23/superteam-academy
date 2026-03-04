@@ -122,7 +122,7 @@ const typeLabels: Record<string, string> = {
   internship: "Internship",
 };
 
-export default function JobDetailPage({ params: { locale } }: { params: { locale: string } }) {
+export default function JobDetailPage() {
   const t = useTranslations("common");
   const tJobs = useTranslations("jobs");
   const { id } = useParams();

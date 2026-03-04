@@ -55,7 +55,7 @@ describe("protected API routes return 401 when unauthenticated", () => {
     expect((await getXp()).status).toBe(401);
     expect((await getStreak()).status).toBe(401);
     expect((await getCourseProgress(new Request("http://localhost/api/progress/solana"), {
-      params: { courseSlug: "solana" },
+      params: Promise.resolve({ courseSlug: "solana" }),
     })).status).toBe(401);
     expect((await getActivity(new Request("http://localhost/api/progress/activity?limit=5"))).status).toBe(401);
     expect((await completeLesson(new NextRequest("http://localhost/api/progress/complete-lesson", {

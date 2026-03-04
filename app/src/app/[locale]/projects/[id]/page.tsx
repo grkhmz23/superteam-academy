@@ -109,11 +109,7 @@ function mapFeedback(project: ApiProject): Feedback[] {
   }));
 }
 
-export default function ProjectDetailPage({
-  params: { locale },
-}: {
-  params: { locale: string };
-}) {
+export default function ProjectDetailPage() {
   const t = useTranslations("common");
   const tProjects = useTranslations("projects");
   const { id } = useParams();

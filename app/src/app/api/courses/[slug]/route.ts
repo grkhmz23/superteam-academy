@@ -6,9 +6,9 @@ import { Errors, handleApiError } from "@/lib/api/errors";
 export const dynamic = "force-dynamic";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 /**
@@ -20,6 +20,7 @@ export async function GET(
   { params }: RouteParams
 ): Promise<Response> {
   try {
+    const { slug } = await params;
     const localeParam = new URL(request.url).searchParams.get("locale");
     const locale: Locale =
       localeParam && locales.includes(localeParam as Locale)
@@ -27,7 +28,7 @@ export async function GET(
         : defaultLocale;
 
     const service = getContentService();
-    const course = await service.getCourse(params.slug, locale);
+    const course = await service.getCourse(slug, locale);
 
     if (!course) {
       throw Errors.notFound("Course not found");
