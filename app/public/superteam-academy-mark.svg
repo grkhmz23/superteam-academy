@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48" role="img" aria-labelledby="title desc">
+  <title id="title">Superteam Academy</title>
+  <desc id="desc">Superteam Academy wordmark</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="48" height="48" rx="12" fill="url(#bg)"/>
+  <path d="M12 18c0-3.314 2.686-6 6-6h12c3.314 0 6 2.686 6 6 0 2.21-1.194 4.142-2.973 5.182A5.998 5.998 0 0 1 30 34H18c-3.314 0-6-2.686-6-6 0-2.21 1.194-4.142 2.973-5.182A5.972 5.972 0 0 1 12 18zm7 0a2 2 0 0 0 0 4h10a2 2 0 1 0 0-4H19zm-1 8a2 2 0 1 0 0 4h12a2 2 0 1 0 0-4H18z" fill="#07111A"/>
+  <text x="60" y="21" fill="#E5F9F4" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700">SUPERTEAM</text>
+  <text x="60" y="36" fill="#93C5FD" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700">ACADEMY</text>
+</svg>

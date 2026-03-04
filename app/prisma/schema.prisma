@@ -1,0 +1,499 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Auth & Identity
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  username      String?   @unique
+  displayName   String?
+  email         String?   @unique
+  emailVerified DateTime?
+  bio           String?
+  avatarUrl     String?
+  isPublic      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Social links
+  twitterHandle  String?
+  githubHandle   String?
+  discordHandle  String?
+  websiteUrl     String?
+
+  // Preferences
+  preferredLocale String @default("en")
+  theme           String @default("dark")
+
+  // Linked wallet for on-chain credentials
+  walletAddress String? @unique
+
+  // Relations
+  accounts       Account[]
+  sessions       Session[]
+  wallets        UserWallet[]
+  courseProgress  CourseProgress[]
+  xpEvents       XPEvent[]
+  achievements   UserAchievement[]
+  streakData     StreakRecord?
+  nonces         WalletNonce[]
+
+  // Phase 5.2 progress service relations
+  enrollments       Enrollment[]
+  lessonCompletions LessonCompletion[]
+  userXP            UserXP?
+  userStreak        UserStreak?
+  userAchievements  UserAchievementNew[]
+  certificates      CertificateRecord[]
+
+  // New relations for expansion features
+  jobsPosted         Job[]
+  jobApplications    JobApplication[]
+  projects           Project[]
+  projectFeedback    ProjectFeedback[]
+  mentorProfile      MentorProfile?
+  mentorshipSessions MentorshipSession[] // as mentee
+  startupIdeas       StartupIdea[]
+  ideaInterests      IdeaInterest[]
+}
+
+// NextAuth required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================================
+// Wallet Linking
+// ============================================================================
+
+model UserWallet {
+  id        String   @id @default(cuid())
+  userId    String
+  address   String   @unique
+  isPrimary Boolean  @default(false)
+  linkedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model WalletNonce {
+  id        String   @id @default(cuid())
+  userId    String?
+  address   String
+  nonce     String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([address])
+}
+
+// ============================================================================
+// Learning Progress
+// ============================================================================
+
+model CourseProgress {
+  id                 String   @id @default(cuid())
+  userId             String
+  courseId            String
+  completedLessons   Int[]    @default([])
+  totalLessons       Int      @default(0)
+  currentModuleIndex Int      @default(0)
+  currentLessonIndex Int      @default(0)
+  startedAt          DateTime @default(now())
+  lastAccessedAt     DateTime @default(now())
+  completedAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+}
+
+// ============================================================================
+// XP & Gamification
+// ============================================================================
+
+model XPEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int
+  reason    String
+  courseId   String?
+  lessonId   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model StreakRecord {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  currentStreak    Int      @default(0)
+  longestStreak    Int      @default(0)
+  lastActivityDate DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId Int
+  unlockedAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+// ============================================================================
+// Leaderboard Cache
+// ============================================================================
+
+model LeaderboardCache {
+  id        String   @id @default(cuid())
+  timeframe String
+  data      Json
+  cachedAt  DateTime @default(now())
+  expiresAt DateTime
+
+  @@unique([timeframe])
+}
+
+// ============================================================================
+// Phase 5.2: Learning Progress Service
+// ============================================================================
+
+model Enrollment {
+  id          String    @id @default(cuid())
+  userId      String
+  courseSlug  String
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseSlug])
+  @@index([userId])
+  @@index([courseSlug])
+}
+
+model LessonCompletion {
+  id          String   @id @default(cuid())
+  userId      String
+  courseSlug  String
+  lessonId    String
+  xpAwarded   Int
+  completedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseSlug, lessonId])
+  @@index([userId])
+  @@index([courseSlug])
+}
+
+model UserXP {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  totalXP          Int      @default(0)
+  weeklyXP         Int      @default(0)
+  monthlyXP        Int      @default(0)
+  lastWeeklyReset  DateTime @default(now())
+  lastMonthlyReset DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserStreak {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  currentStreak    Int      @default(0)
+  longestStreak    Int      @default(0)
+  lastActivityDate DateTime?
+  streakHistory    Json     @default("[]")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CertificateRecord {
+  id                     String   @id @default(cuid())
+  publicId               String   @unique
+  userId                 String
+  courseSlug             String
+  courseNameSnapshot     String
+  completedAt            DateTime
+  xpEarned               Int
+  recipientNameSnapshot  String
+  recipientWalletSnapshot String?
+  credentialMintSnapshot String?
+  verificationUrlSnapshot String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseSlug])
+  @@index([publicId])
+  @@index([userId])
+}
+
+model UserAchievementNew {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+// ============================================================================
+// Job Board
+// ============================================================================
+
+model Job {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  company     String
+  companyLogo String?
+  location    String
+  type        String
+  salaryRange String?
+  skills      String[]
+  experience  String
+  postedBy    String
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime
+
+  poster      User     @relation(fields: [postedBy], references: [id])
+  applications JobApplication[]
+
+  @@index([postedBy])
+  @@index([status])
+}
+
+model JobApplication {
+  id          String   @id @default(cuid())
+  jobId       String
+  userId      String
+  status      String   @default("pending")
+  coverLetter String?
+  createdAt   DateTime @default(now())
+
+  job         Job      @relation(fields: [jobId], references: [id])
+  applicant   User     @relation(fields: [userId], references: [id])
+
+  @@unique([jobId, userId])
+  @@index([jobId])
+  @@index([userId])
+}
+
+// ============================================================================
+// Project Showcase
+// ============================================================================
+
+model Project {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  tags            String[]
+  thumbnail       String?
+  githubUrl       String?
+  demoUrl         String?
+  contractAddress String?
+  ownerId         String
+  status          String   @default("published")
+  likes           Int      @default(0)
+  views           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  owner           User     @relation(fields: [ownerId], references: [id])
+  feedback        ProjectFeedback[]
+  badges          ProjectBadge[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model ProjectFeedback {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  content   String
+  rating    Int
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id])
+  author    User     @relation(fields: [userId], references: [id])
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+model ProjectBadge {
+  id        String   @id @default(cuid())
+  projectId String
+  badgeType String
+  awardedAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+}
+
+// ============================================================================
+// Mentorship Marketplace
+// ============================================================================
+
+model MentorProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  bio           String
+  expertise     String[]
+  hourlyRate    Int?
+  availability  Json
+  isVerified    Boolean  @default(false)
+  totalSessions Int      @default(0)
+  rating        Float    @default(0)
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id])
+  sessions      MentorshipSession[]
+
+  @@index([userId])
+}
+
+model MentorshipSession {
+  id          String   @id @default(cuid())
+  mentorId    String
+  menteeId    String
+  status      String   @default("scheduled")
+  scheduledAt DateTime
+  duration    Int
+  topic       String
+  notes       String?
+  rating      Int?
+  feedback    String?
+  createdAt   DateTime @default(now())
+
+  mentor      MentorProfile @relation(fields: [mentorId], references: [id])
+  mentee      User          @relation(fields: [menteeId], references: [id])
+
+  @@index([mentorId])
+  @@index([menteeId])
+}
+
+// ============================================================================
+// Team/Investor Matching ("Idea Hub")
+// ============================================================================
+
+model StartupIdea {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  problem     String
+  solution    String
+  marketSize  String?
+  traction    String?
+  lookingFor  String[]
+  stage       String
+  ownerId     String
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User     @relation(fields: [ownerId], references: [id])
+  interested  IdeaInterest[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model IdeaInterest {
+  id        String   @id @default(cuid())
+  ideaId    String
+  userId    String
+  role      String
+  message   String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  idea      StartupIdea @relation(fields: [ideaId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+  @@index([userId])
+}
+
+// ============================================================================
+// Hackathon Events Aggregator
+// ============================================================================
+
+model HackathonEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  organizer   String
+  logo        String?
+  startDate   DateTime
+  endDate     DateTime
+  location    String
+  prizes      String?
+  url         String
+  tags        String[]
+  source      String
+  createdAt   DateTime @default(now())
+
+  @@index([startDate])
+  @@index([source])
+}

@@ -1,0 +1,5 @@
+.data/
+.next/
+tmp/
+node_modules/
+coverage/

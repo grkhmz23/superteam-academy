@@ -1,0 +1,178 @@
+"use client";
+
+import { useMemo } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/lib/i18n/navigation";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
+import type { Module } from "@/types/content";
+
+interface LessonNavigationProps {
+  courseSlug: string;
+  currentLessonId: string;
+  modules: Module[];
+  completedLessons: string[];
+}
+
+interface LessonInfo {
+  id: string;
+  title: string;
+  moduleId: string;
+  moduleTitle: string;
+  moduleIndex: number;
+  lessonIndex: number;
+  isCompleted: boolean;
+}
+
+/**
+ * Flatten all lessons from all modules into a single ordered list
+ */
+function flattenLessons(modules: Module[], completedLessons: string[]): LessonInfo[] {
+  const lessons: LessonInfo[] = [];
+
+  modules.forEach((module, moduleIndex) => {
+    module.lessons.forEach((lesson, lessonIndex) => {
+      lessons.push({
+        id: lesson.id,
+        title: lesson.title,
+        moduleId: module.id,
+        moduleTitle: module.title,
+        moduleIndex,
+        lessonIndex,
+        isCompleted: completedLessons.includes(lesson.id),
+      });
+    });
+  });
+
+  return lessons;
+}
+
+export function LessonNavigation({
+  courseSlug,
+  currentLessonId,
+  modules,
+  completedLessons,
+}: LessonNavigationProps) {
+  const t = useTranslations("lesson");
+  const tc = useTranslations("common");
+  const lessons = useMemo(
+    () => flattenLessons(modules, completedLessons),
+    [modules, completedLessons]
+  );
+
+  const currentIndex = useMemo(
+    () => lessons.findIndex((l) => l.id === currentLessonId),
+    [lessons, currentLessonId]
+  );
+
+  const currentLesson = lessons[currentIndex];
+  const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
+  const nextLesson =
+    currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
+
+  if (!currentLesson) {
+    return null;
+  }
+
+  return (
+    <div className="lesson-nav-card flex flex-wrap items-center justify-between gap-3">
+      {/* Left: Previous Lesson */}
+      <div className="flex min-w-[8rem] flex-1 justify-start">
+        {prevLesson ? (
+          <Link
+            href={`/courses/${courseSlug}/lessons/${prevLesson.id}`}
+          >
+            <Button variant="ghost" size="sm" className="gap-1">
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("previousLesson")}</span>
+              <span className="sm:hidden">{tc("previous")}</span>
+            </Button>
+          </Link>
+        ) : (
+          <Button variant="ghost" size="sm" disabled className="gap-1">
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("previousLesson")}</span>
+          </Button>
+        )}
+      </div>
+
+      {/* Center: Lesson Info */}
+      <div className="flex min-w-[12rem] flex-1 flex-col items-center text-center">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <BookOpen className="h-4 w-4" />
+          <span className="hidden sm:inline">{currentLesson.moduleTitle}</span>
+        </div>
+        <div className="text-sm font-medium">
+          {t("lessonProgress", {
+            current: currentLesson.lessonIndex + 1,
+            total: lessons.filter((l) => l.moduleId === currentLesson.moduleId).length,
+          })}
+        </div>
+        {nextLesson && nextLesson.moduleId !== currentLesson.moduleId && (
+          <div className="text-xs text-muted-foreground">
+            {t("nextModule", { module: nextLesson.moduleTitle })}
+          </div>
+        )}
+      </div>
+
+      {/* Right: Next Lesson */}
+      <div className="flex min-w-[8rem] flex-1 justify-end">
+        {nextLesson ? (
+          <Link
+            href={`/courses/${courseSlug}/lessons/${nextLesson.id}`}
+          >
+            <Button variant="ghost" size="sm" className="gap-1">
+              <span className="hidden sm:inline">{t("nextLesson")}</span>
+              <span className="sm:hidden">{tc("next")}</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        ) : (
+          <Link href={`/courses/${courseSlug}`}>
+            <Button variant="ghost" size="sm" className="gap-1">
+              {t("backToCourse")}
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Get the next incomplete lesson for a course
+ */
+export function getNextLesson(
+  modules: Module[],
+  completedLessons: string[]
+): LessonInfo | null {
+  const lessons = flattenLessons(modules, completedLessons);
+  return lessons.find((l) => !l.isCompleted) ?? null;
+}
+
+/**
+ * Check if all lessons are complete
+ */
+export function isCourseComplete(
+  modules: Module[],
+  completedLessons: string[]
+): boolean {
+  const lessons = flattenLessons(modules, completedLessons);
+  return lessons.length > 0 && lessons.every((l) => l.isCompleted);
+}
+
+/**
+ * Get course progress stats
+ */
+export function getCourseProgress(
+  modules: Module[],
+  completedLessons: string[]
+): { completed: number; total: number; percent: number } {
+  const lessons = flattenLessons(modules, completedLessons);
+  const completed = lessons.filter((l) => l.isCompleted).length;
+  const total = lessons.length;
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return { completed, total, percent };
+}

@@ -1,0 +1,25 @@
+{
+  "name": "superteam-academy",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "workspaces": [
+    "app",
+    "backend",
+    "runner"
+  ],
+  "scripts": {
+    "lint": "pnpm -C app lint",
+    "lint:console-guard": "pnpm -C app lint:console-guard",
+    "typecheck": "pnpm -C app typecheck",
+    "typecheck:backend": "pnpm -C backend typecheck",
+    "test": "pnpm -C app test",
+    "test:runner": "pnpm -C runner test",
+    "build": "pnpm -C app build",
+    "dev": "pnpm -C app dev",
+    "dev:runner": "pnpm -C runner dev"
+  }
+}
