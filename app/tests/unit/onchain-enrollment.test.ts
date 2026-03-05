@@ -25,7 +25,7 @@ describe("onchain enrollment helpers", () => {
       SUPERTEAM_ACADEMY_PROGRAM_ID.toBase58()
     );
     expect(instruction.keys).toEqual([
-      expect.objectContaining({ pubkey: expect.any(PublicKey), isSigner: false, isWritable: false }),
+      expect.objectContaining({ pubkey: expect.any(PublicKey), isSigner: false, isWritable: true }),
       expect.objectContaining({ pubkey: expect.any(PublicKey), isSigner: false, isWritable: true }),
       expect.objectContaining({ pubkey: learner, isSigner: true, isWritable: true }),
       expect.objectContaining({ pubkey: SystemProgram.programId, isSigner: false, isWritable: false }),

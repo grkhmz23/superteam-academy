@@ -80,7 +80,7 @@ export function buildEnrollInstruction(input: {
   return new TransactionInstruction({
     programId: SUPERTEAM_ACADEMY_PROGRAM_ID,
     keys: [
-      { pubkey: coursePda, isSigner: false, isWritable: false },
+      { pubkey: coursePda, isSigner: false, isWritable: true },
       { pubkey: enrollmentPda, isSigner: false, isWritable: true },
       { pubkey: learner, isSigner: true, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },

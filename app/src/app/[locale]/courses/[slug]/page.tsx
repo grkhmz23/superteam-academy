@@ -12,7 +12,10 @@ import { LessonRow } from "@/components/courses/LessonRow";
 import { Link } from "@/lib/i18n/navigation";
 import { useProgress } from "@/lib/hooks/use-progress";
 import { resolveClientCourseId } from "@/lib/progress/client-course-id-overrides";
-import { enrollWithOnchainTransaction } from "@/lib/progress/client-enrollment";
+import {
+  enrollWithOnchainTransaction,
+  getEnrollmentErrorDescription,
+} from "@/lib/progress/client-enrollment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -143,7 +146,7 @@ export default function CourseDetailPage() {
     } catch (err) {
       console.error("Failed to enroll:", err);
       toast.error("Course enrollment failed", {
-        description: "Approve the devnet enrollment transaction in your wallet.",
+        description: getEnrollmentErrorDescription(err),
       });
     } finally {
       setIsEnrolling(false);

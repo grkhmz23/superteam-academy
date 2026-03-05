@@ -22,7 +22,10 @@ import { AccountExplorer } from "@/components/courses/explorers/AccountExplorer"
 import { PDADerivationExplorer } from "@/components/courses/explorers/PDADerivationExplorer";
 import { useProgress } from "@/lib/hooks/use-progress";
 import { resolveClientCourseId } from "@/lib/progress/client-course-id-overrides";
-import { enrollWithOnchainTransaction } from "@/lib/progress/client-enrollment";
+import {
+  enrollWithOnchainTransaction,
+  getEnrollmentErrorDescription,
+} from "@/lib/progress/client-enrollment";
 import {
   clearSolanaFundamentalsState,
   createDefaultSolanaFundamentalsState,
@@ -356,7 +359,7 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
         .catch((error) => {
           console.error(error);
           toast.error("Course enrollment failed", {
-            description: "Approve the devnet enrollment transaction in your wallet.",
+            description: getEnrollmentErrorDescription(error),
           });
         })
         .finally(() => setIsEnrolling(false));
