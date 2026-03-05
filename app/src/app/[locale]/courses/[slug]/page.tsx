@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useLocale, useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
@@ -13,6 +12,7 @@ import { Link } from "@/lib/i18n/navigation";
 import { useProgress } from "@/lib/hooks/use-progress";
 import { resolveClientCourseId } from "@/lib/progress/client-course-id-overrides";
 import {
+  enrollWithoutWallet,
   enrollWithOnchainTransaction,
   getEnrollmentErrorDescription,
 } from "@/lib/progress/client-enrollment";
@@ -51,7 +51,6 @@ export default function CourseDetailPage() {
   const router = useRouter();
   const { connection } = useConnection();
   const { publicKey, connected, sendTransaction } = useWallet();
-  const { setVisible } = useWalletModal();
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user;
 
@@ -113,29 +112,33 @@ export default function CourseDetailPage() {
       return;
     }
 
-    if (!connected || !publicKey) {
-      setVisible(true);
-      return;
-    }
-
     setIsEnrolling(true);
 
     try {
-      const effectiveCourseId = course
-        ? resolveClientCourseId(course.slug, course.onChainCourseId)
-        : null;
+      if (connected && publicKey) {
+        const effectiveCourseId = course
+          ? resolveClientCourseId(course.slug, course.onChainCourseId)
+          : null;
 
-      if (!effectiveCourseId) {
-        throw new Error("Course is missing an on-chain course id.");
+        if (effectiveCourseId) {
+          try {
+            await enrollWithOnchainTransaction({
+              courseId: effectiveCourseId,
+              courseSlug: params.slug,
+              connection,
+              learner: publicKey,
+              sendTransaction,
+            });
+          } catch (walletError) {
+            console.error("On-chain enrollment failed, falling back to direct enroll:", walletError);
+            await enrollWithoutWallet(params.slug);
+          }
+        } else {
+          await enrollWithoutWallet(params.slug);
+        }
+      } else {
+        await enrollWithoutWallet(params.slug);
       }
-
-      await enrollWithOnchainTransaction({
-        courseId: effectiveCourseId,
-        courseSlug: params.slug,
-        connection,
-        learner: publicKey,
-        sendTransaction,
-      });
 
       trackEvent("enroll_course", "courses", params.slug);
       refreshProgress();
@@ -161,7 +164,6 @@ export default function CourseDetailPage() {
     publicKey,
     refreshProgress,
     router,
-    setVisible,
     sendTransaction,
   ]);
 
@@ -288,7 +290,7 @@ export default function CourseDetailPage() {
       ) : (
         <>
           <Sparkles className="h-4 w-4" />
-          {connected ? t("enrollCTA") : tc("connectWallet")}
+          {t("enrollCTA")}
         </>
       )}
     </Button>

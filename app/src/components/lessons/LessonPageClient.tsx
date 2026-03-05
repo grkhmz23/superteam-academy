@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Keypair } from "@solana/web3.js";
@@ -23,6 +22,7 @@ import { PDADerivationExplorer } from "@/components/courses/explorers/PDADerivat
 import { useProgress } from "@/lib/hooks/use-progress";
 import { resolveClientCourseId } from "@/lib/progress/client-course-id-overrides";
 import {
+  enrollWithoutWallet,
   enrollWithOnchainTransaction,
   getEnrollmentErrorDescription,
 } from "@/lib/progress/client-enrollment";
@@ -200,7 +200,6 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
   const router = useRouter();
   const { connection } = useConnection();
   const { publicKey, connected, sendTransaction } = useWallet();
-  const { setVisible } = useWalletModal();
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user;
   const userScope = session?.user?.email ?? session?.user?.name ?? "guest";
@@ -310,24 +309,23 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
       return false;
     }
 
-    if (!connected || !publicKey) {
-      setVisible(true);
-      return false;
-    }
-
     const effectiveCourseId = resolveClientCourseId(courseSlug, courseOnChainId);
-
-    if (!effectiveCourseId) {
-      return false;
+    if (connected && publicKey && effectiveCourseId) {
+      try {
+        await enrollWithOnchainTransaction({
+          courseId: effectiveCourseId,
+          courseSlug: slug,
+          connection,
+          learner: publicKey,
+          sendTransaction,
+        });
+      } catch (walletError) {
+        console.error("On-chain enrollment failed, falling back to direct enroll:", walletError);
+        await enrollWithoutWallet(slug);
+      }
+    } else {
+      await enrollWithoutWallet(slug);
     }
-
-    await enrollWithOnchainTransaction({
-      courseId: effectiveCourseId,
-      courseSlug: slug,
-      connection,
-      learner: publicKey,
-      sendTransaction,
-    });
 
     await refreshProgress();
     return true;
@@ -339,7 +337,6 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
     isAuthenticated,
     publicKey,
     refreshProgress,
-    setVisible,
     sendTransaction,
     slug,
   ]);
@@ -349,9 +346,7 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
       isAuthenticated &&
       !progress &&
       !isEnrolling &&
-      !hasAttemptedAutoEnroll &&
-      connected &&
-      publicKey
+      !hasAttemptedAutoEnroll
     ) {
       setHasAttemptedAutoEnroll(true);
       setIsEnrolling(true);
@@ -365,13 +360,11 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
         .finally(() => setIsEnrolling(false));
     }
   }, [
-    connected,
     ensureWalletEnrollment,
     hasAttemptedAutoEnroll,
     isAuthenticated,
     isEnrolling,
     progress,
-    publicKey,
   ]);
 
   useEffect(() => {

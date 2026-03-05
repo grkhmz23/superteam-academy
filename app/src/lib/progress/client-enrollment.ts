@@ -65,6 +65,18 @@ export interface EnrollOnchainInput {
   ) => Promise<string>;
 }
 
+export async function enrollWithoutWallet(courseSlug: string): Promise<void> {
+  const response = await fetch("/api/progress/enroll-direct", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ courseSlug }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Could not enroll without wallet.");
+  }
+}
+
 async function syncExistingEnrollment(input: {
   courseId: string;
   courseSlug: string;
