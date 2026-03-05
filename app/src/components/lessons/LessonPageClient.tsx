@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, type ReactNode } from "react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Keypair } from "@solana/web3.js";
@@ -20,11 +19,8 @@ import { TerminalBlock } from "@/components/courses/TerminalBlock";
 import { AccountExplorer } from "@/components/courses/explorers/AccountExplorer";
 import { PDADerivationExplorer } from "@/components/courses/explorers/PDADerivationExplorer";
 import { useProgress } from "@/lib/hooks/use-progress";
-import { resolveClientCourseId } from "@/lib/progress/client-course-id-overrides";
 import {
   enrollWithoutWallet,
-  enrollWithOnchainTransaction,
-  getEnrollmentErrorDescription,
 } from "@/lib/progress/client-enrollment";
 import {
   clearSolanaFundamentalsState,
@@ -198,8 +194,6 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
   const t = useTranslations("lesson");
   const tc = useTranslations("common");
   const router = useRouter();
-  const { connection } = useConnection();
-  const { publicKey, connected, sendTransaction } = useWallet();
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user;
   const userScope = session?.user?.email ?? session?.user?.name ?? "guest";
@@ -309,35 +303,13 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
       return false;
     }
 
-    const effectiveCourseId = resolveClientCourseId(courseSlug, courseOnChainId);
-    if (connected && publicKey && effectiveCourseId) {
-      try {
-        await enrollWithOnchainTransaction({
-          courseId: effectiveCourseId,
-          courseSlug: slug,
-          connection,
-          learner: publicKey,
-          sendTransaction,
-        });
-      } catch (walletError) {
-        console.error("On-chain enrollment failed, falling back to direct enroll:", walletError);
-        await enrollWithoutWallet(slug);
-      }
-    } else {
-      await enrollWithoutWallet(slug);
-    }
+    await enrollWithoutWallet(slug);
 
     await refreshProgress();
     return true;
   }, [
-    courseOnChainId,
-    courseSlug,
-    connection,
-    connected,
     isAuthenticated,
-    publicKey,
     refreshProgress,
-    sendTransaction,
     slug,
   ]);
 
@@ -353,9 +325,7 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
       ensureWalletEnrollment()
         .catch((error) => {
           console.error(error);
-          toast.error("Course enrollment failed", {
-            description: getEnrollmentErrorDescription(error),
-          });
+          toast.error("Course enrollment failed");
         })
         .finally(() => setIsEnrolling(false));
     }

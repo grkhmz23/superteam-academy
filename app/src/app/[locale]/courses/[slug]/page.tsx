@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
@@ -10,11 +9,8 @@ import { trackEvent } from "@/components/analytics/GoogleAnalytics";
 import { LessonRow } from "@/components/courses/LessonRow";
 import { Link } from "@/lib/i18n/navigation";
 import { useProgress } from "@/lib/hooks/use-progress";
-import { resolveClientCourseId } from "@/lib/progress/client-course-id-overrides";
 import {
   enrollWithoutWallet,
-  enrollWithOnchainTransaction,
-  getEnrollmentErrorDescription,
 } from "@/lib/progress/client-enrollment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,8 +45,6 @@ export default function CourseDetailPage() {
   const locale = useLocale();
   const params = useParams<{ slug: string }>();
   const router = useRouter();
-  const { connection } = useConnection();
-  const { publicKey, connected, sendTransaction } = useWallet();
   const { data: session } = useSession();
   const isAuthenticated = !!session?.user;
 
@@ -115,30 +109,7 @@ export default function CourseDetailPage() {
     setIsEnrolling(true);
 
     try {
-      if (connected && publicKey) {
-        const effectiveCourseId = course
-          ? resolveClientCourseId(course.slug, course.onChainCourseId)
-          : null;
-
-        if (effectiveCourseId) {
-          try {
-            await enrollWithOnchainTransaction({
-              courseId: effectiveCourseId,
-              courseSlug: params.slug,
-              connection,
-              learner: publicKey,
-              sendTransaction,
-            });
-          } catch (walletError) {
-            console.error("On-chain enrollment failed, falling back to direct enroll:", walletError);
-            await enrollWithoutWallet(params.slug);
-          }
-        } else {
-          await enrollWithoutWallet(params.slug);
-        }
-      } else {
-        await enrollWithoutWallet(params.slug);
-      }
+      await enrollWithoutWallet(params.slug);
 
       trackEvent("enroll_course", "courses", params.slug);
       refreshProgress();
@@ -148,23 +119,17 @@ export default function CourseDetailPage() {
       }
     } catch (err) {
       console.error("Failed to enroll:", err);
-      toast.error("Course enrollment failed", {
-        description: getEnrollmentErrorDescription(err),
-      });
+      toast.error("Course enrollment failed");
     } finally {
       setIsEnrolling(false);
     }
   }, [
-    connection,
-    connected,
     course,
     isAuthenticated,
     locale,
     params.slug,
-    publicKey,
     refreshProgress,
     router,
-    sendTransaction,
   ]);
 
   const handleContinue = useCallback(() => {
