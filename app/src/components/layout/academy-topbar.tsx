@@ -1,16 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import { Command, Flame, Hexagon, Orbit, Sparkles, Wallet } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { Command, Flame, Hexagon, Orbit, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link, usePathname } from "@/lib/i18n/navigation";
+import { usePathname } from "@/lib/i18n/navigation";
 import { useStreak } from "@/lib/hooks/use-streak";
 import { useXP } from "@/lib/hooks/use-xp";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { LanguageSelector } from "./language-selector";
 import { getPageLabelKey } from "@/components/layout/navigation";
+import { WalletButton } from "@/components/auth/WalletButton";
 
 function resolvePageLabel(
   pathname: string,
@@ -40,7 +40,6 @@ export function AcademyTopBar() {
   const tNav = useTranslations("nav");
   const tc = useTranslations("common");
   const pathname = usePathname();
-  const { data: session } = useSession();
   const { streak } = useStreak();
   const { level } = useXP();
 
@@ -68,7 +67,6 @@ export function AcademyTopBar() {
     () => resolvePageLabel(pathname, labels, tNav("home")),
     [labels, pathname, tNav]
   );
-  const wallet = session?.user?.walletAddress;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/50 bg-background/60 px-4 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/45 md:px-6 lg:px-8">
@@ -117,15 +115,7 @@ export function AcademyTopBar() {
             </div>
           </TopBarPill>
 
-          <Link
-            href="/settings"
-            className="chrome-pill chrome-pill-interactive inline-flex items-center gap-2 px-3.5 py-2 font-medium text-foreground focus-visible:ring-2 focus-visible:ring-ring/70"
-          >
-            <Wallet className="h-4 w-4 text-primary" />
-            <span className="bidi-safe">
-              {wallet ? `${wallet.slice(0, 4)}...${wallet.slice(-4)}` : tc("connectWallet")}
-            </span>
-          </Link>
+          <WalletButton />
         </div>
       </div>
     </header>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useSession, signIn } from "next-auth/react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useTheme } from "next-themes";
 import { useRouter, usePathname } from "@/lib/i18n/navigation";
 import { localeOptions } from "@/lib/i18n/locales";
@@ -54,7 +55,8 @@ function SettingsContent() {
   const t = useTranslations("settings");
   const tc = useTranslations("common");
   const { data: session } = useSession();
-  const { publicKey, signMessage, connected } = useWallet();
+  const { publicKey, signMessage, connected, disconnect } = useWallet();
+  const { setVisible } = useWalletModal();
   const { theme: currentTheme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
@@ -195,8 +197,18 @@ function SettingsContent() {
   const handleUnlinkWallet = useCallback(async () => {
     setIsLinkingWallet(true);
     setError(null);
+    let disconnectMessage: string | null = null;
 
     try {
+      if (connected) {
+        try {
+          await disconnect();
+        } catch (err) {
+          disconnectMessage =
+            err instanceof Error ? err.message : "Wallet disconnect failed";
+        }
+      }
+
       const response = await fetch("/api/auth/link-wallet", {
         method: "DELETE",
       });
@@ -213,8 +225,13 @@ function SettingsContent() {
         setSettings(data);
       }
 
-      setSaveMessage(t("saved"));
-      toast.success(t("saved"));
+      setSaveMessage("Wallet disconnected and unlinked");
+      toast.success("Wallet disconnected and unlinked");
+      if (disconnectMessage) {
+        toast.error("Wallet adapter disconnect warning", {
+          description: disconnectMessage,
+        });
+      }
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to unlink wallet";
@@ -223,7 +240,7 @@ function SettingsContent() {
     } finally {
       setIsLinkingWallet(false);
     }
-  }, [t]);
+  }, [connected, disconnect]);
 
   const handleExportData = useCallback(async () => {
     try {
@@ -436,7 +453,7 @@ function SettingsContent() {
                     disabled={isLinkingWallet}
                   >
                     {isLinkingWallet ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
-                    {t("unlink")}
+                    Disconnect & Unlink
                   </Button>
                 ) : connected ? (
                   <Button
@@ -449,7 +466,9 @@ function SettingsContent() {
                     {t("linkWallet")}
                   </Button>
                 ) : (
-                  <Badge variant="secondary">{t("notLinked")}</Badge>
+                  <Button variant="ghost" size="sm" onClick={() => setVisible(true)}>
+                    {tc("connectWallet")}
+                  </Button>
                 )}
               </div>
             </div>

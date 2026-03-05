@@ -25,6 +25,7 @@ describe("UI V4 chrome system", () => {
     expect(topbarSource).toContain("chrome-pill");
     expect(topbarSource).toContain("chrome-pill-interactive");
     expect(topbarSource).toContain("focus-visible:ring-ring/70");
+    expect(topbarSource).toContain("WalletButton");
     expect(topbarSource).not.toContain("bg-black/20");
   });
 });

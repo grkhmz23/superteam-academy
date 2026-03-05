@@ -18,4 +18,12 @@ describe("auth oauth ui", () => {
     expect(source).toContain('handleOAuthLink("google")');
     expect(source).toContain('handleOAuthLink("github")');
   });
+
+  it("supports disconnect+unlink flow and reconnecting another wallet in settings", () => {
+    const source = readFileSync(resolve("src/app/[locale]/settings/page.tsx"), "utf8");
+
+    expect(source).toContain("disconnect()");
+    expect(source).toContain('method: "DELETE"');
+    expect(source).toContain("setVisible(true)");
+  });
 });
