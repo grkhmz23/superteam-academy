@@ -34,7 +34,11 @@ function getConnectSrcOrigins(): string[] {
     "https://api.devnet.solana.com",
     ...(runnerOrigin ? [runnerOrigin] : []),
     "https://www.google-analytics.com",
+    "https://region1.google-analytics.com",
     "https://www.googletagmanager.com",
+    "https://*.i.posthog.com",
+    "https://us-assets.i.posthog.com",
+    "wss://*.i.posthog.com",
     posthogOrigin,
     ...(sentryOrigin ? [sentryOrigin] : []),
   ];
@@ -48,8 +52,8 @@ export function buildCsp(pathname: string): string {
   const connectSrc = getConnectSrcOrigins();
 
   const scriptSrc = isEditorRoute
-    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com"
-    : "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com";
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://*.i.posthog.com"
+    : "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.i.posthog.com";
   const workerSrc = isEditorRoute ? "worker-src 'self' blob:" : "worker-src 'self'";
 
   return [
@@ -58,7 +62,7 @@ export function buildCsp(pathname: string): string {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     workerSrc,
     "img-src 'self' blob: data: https://cdn.sanity.io https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://www.google-analytics.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
     `connect-src ${connectSrc.join(" ")}`,
     "media-src 'self'",
     "object-src 'none'",

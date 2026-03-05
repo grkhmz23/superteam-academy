@@ -18,8 +18,11 @@ describe("middleware CSP routing", () => {
     const csp = buildCsp("/en/playground");
 
     expect(csp).toContain("https://us.i.posthog.com");
+    expect(csp).toContain("https://*.i.posthog.com");
+    expect(csp).toContain("https://region1.google-analytics.com");
     expect(csp).toContain("style-src 'self' 'unsafe-inline' https://fonts.googleapis.com");
-    expect(csp).toContain("font-src 'self' https://fonts.gstatic.com");
+    expect(csp).toContain("font-src 'self' data: https://fonts.gstatic.com");
+    expect(csp).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://*.i.posthog.com");
   });
 
   it("allows Sentry ingest when a browser DSN is configured", () => {
