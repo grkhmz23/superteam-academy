@@ -10,9 +10,14 @@ const verifyEnrollmentAccountExistsMock = vi.fn();
 const prismaMock = {
   user: {
     findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    update: vi.fn(),
   },
   userWallet: {
     findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    updateMany: vi.fn(),
+    upsert: vi.fn(),
   },
 };
 
@@ -46,7 +51,12 @@ describe("POST /api/progress/enroll-existing", () => {
     prismaMock.user.findUnique.mockResolvedValue({
       walletAddress: "11111111111111111111111111111111",
     });
+    prismaMock.user.findFirst.mockResolvedValue(null);
+    prismaMock.user.update.mockResolvedValue({});
     prismaMock.userWallet.findFirst.mockResolvedValue(null);
+    prismaMock.userWallet.findUnique.mockResolvedValue(null);
+    prismaMock.userWallet.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.userWallet.upsert.mockResolvedValue({});
   });
 
   it("requires an authenticated session", async () => {
@@ -68,12 +78,41 @@ describe("POST /api/progress/enroll-existing", () => {
     expect(response.status).toBe(401);
   });
 
-  it("rejects when wallet is not linked to the authenticated user", async () => {
+  it("auto-links wallet when on-chain enrollment exists and wallet is not linked yet", async () => {
     getServerSessionMock.mockResolvedValue({ user: { id: "user-1" } });
     prismaMock.user.findUnique.mockResolvedValue({
       walletAddress: "22222222222222222222222222222222",
     });
     prismaMock.userWallet.findFirst.mockResolvedValue(null);
+
+    const { POST } = await import("@/app/api/progress/enroll-existing/route");
+    const response = await POST(
+      new NextRequest("http://localhost/api/progress/enroll-existing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseSlug: "solana-fundamentals",
+          courseId: "solana-fundamentals",
+          walletAddress: "11111111111111111111111111111111",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { walletAddress: "11111111111111111111111111111111" },
+    });
+    expect(enrollInCourseMock).toHaveBeenCalled();
+  });
+
+  it("rejects when wallet is linked to another user", async () => {
+    getServerSessionMock.mockResolvedValue({ user: { id: "user-1" } });
+    prismaMock.user.findUnique.mockResolvedValue({
+      walletAddress: "22222222222222222222222222222222",
+    });
+    prismaMock.userWallet.findFirst.mockResolvedValue(null);
+    prismaMock.user.findFirst.mockResolvedValue({ id: "user-2" });
 
     const { POST } = await import("@/app/api/progress/enroll-existing/route");
     const response = await POST(

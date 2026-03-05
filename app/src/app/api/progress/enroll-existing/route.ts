@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth/config";
 import { verifyEnrollmentAccountExists } from "@/lib/progress/onchain-sync";
+import { ensureWalletLinkedToUser } from "@/lib/progress/ensure-wallet-link";
 import { getProgressService } from "@/lib/services/progress-factory";
-import { prisma } from "@/lib/db/client";
 import { validate, Schemas } from "@/lib/api/validation";
 import { Errors, handleApiError } from "@/lib/api/errors";
 import { logger, generateRequestId } from "@/lib/logging/logger";
@@ -32,30 +32,18 @@ export async function POST(request: Request): Promise<Response> {
       body
     );
 
-    const [user, linkedWallet, onChainVerification] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { walletAddress: true },
-      }),
-      prisma.userWallet.findFirst({
-        where: { userId: session.user.id, address: walletAddress },
-        select: { id: true },
-      }),
-      verifyEnrollmentAccountExists({ courseId, walletAddress }),
-    ]);
-
-    const hasWalletLink = user?.walletAddress === walletAddress || Boolean(linkedWallet);
-    if (!hasWalletLink) {
-      throw Errors.forbidden(
-        "Enrollment wallet is not linked to the authenticated user"
-      );
-    }
+    const onChainVerification = await verifyEnrollmentAccountExists({
+      courseId,
+      walletAddress,
+    });
 
     if (!onChainVerification.ok) {
       throw Errors.badRequest(
         onChainVerification.error ?? "On-chain enrollment account not found"
       );
     }
+
+    await ensureWalletLinkedToUser(session.user.id, walletAddress);
 
     const progressService = getProgressService();
     await progressService.enrollInCourse(session.user.id, courseSlug);
