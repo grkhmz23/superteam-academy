@@ -6,6 +6,7 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Keypair } from "@solana/web3.js";
+import { toast } from "sonner";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -206,6 +207,7 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
   const [completionResult, setCompletionResult] = useState<CompletionResult | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [hasAttemptedAutoEnroll, setHasAttemptedAutoEnroll] = useState(false);
   const [showCourseComplete, setShowCourseComplete] = useState(false);
   const [localState, setLocalState] = useState<SolanaFundamentalsLocalState>(
     createDefaultSolanaFundamentalsState
@@ -340,15 +342,29 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
   ]);
 
   useEffect(() => {
-    if (isAuthenticated && !progress && !isEnrolling && connected && publicKey) {
+    if (
+      isAuthenticated &&
+      !progress &&
+      !isEnrolling &&
+      !hasAttemptedAutoEnroll &&
+      connected &&
+      publicKey
+    ) {
+      setHasAttemptedAutoEnroll(true);
       setIsEnrolling(true);
       ensureWalletEnrollment()
-        .catch(console.error)
+        .catch((error) => {
+          console.error(error);
+          toast.error("Course enrollment failed", {
+            description: "Approve the devnet enrollment transaction in your wallet.",
+          });
+        })
         .finally(() => setIsEnrolling(false));
     }
   }, [
     connected,
     ensureWalletEnrollment,
+    hasAttemptedAutoEnroll,
     isAuthenticated,
     isEnrolling,
     progress,
@@ -438,9 +454,16 @@ export function LessonPageClient({ slug, initialData }: LessonPageClientProps) {
         }
 
         refreshProgress();
+      } else {
+        toast.error("Could not mark lesson as complete", {
+          description: "Please retry in a moment.",
+        });
       }
     } catch (err) {
       console.error("Failed to complete lesson:", err);
+      toast.error("Could not mark lesson as complete", {
+        description: "Please retry in a moment.",
+      });
     } finally {
       setIsCompleting(false);
     }

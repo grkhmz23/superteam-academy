@@ -4,6 +4,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth/config";
 import { verifyEnrollmentTransaction } from "@/lib/progress/onchain-sync";
 import { getProgressService } from "@/lib/services/progress-factory";
+import { prisma } from "@/lib/db/client";
 import { validate, Schemas } from "@/lib/api/validation";
 import { Errors, handleApiError } from "@/lib/api/errors";
 import { logger, generateRequestId } from "@/lib/logging/logger";
@@ -51,6 +52,29 @@ export async function POST(request: Request): Promise<Response> {
     if (!verification.ok) {
       throw Errors.badRequest(
         verification.error ?? "Unable to verify on-chain enrollment"
+      );
+    }
+
+    const [user, linkedWallet] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { walletAddress: true },
+      }),
+      prisma.userWallet.findFirst({
+        where: {
+          userId: session.user.id,
+          address: walletAddress,
+        },
+        select: { id: true },
+      }),
+    ]);
+
+    const hasWalletLink =
+      user?.walletAddress === walletAddress || Boolean(linkedWallet);
+
+    if (!hasWalletLink) {
+      throw Errors.forbidden(
+        "Enrollment wallet is not linked to the authenticated user"
       );
     }
 

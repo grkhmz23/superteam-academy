@@ -33,4 +33,12 @@ describe("UI V4 courses surfaces", () => {
     expect(detailSource).toContain("LessonRow");
     expect(detailSource).toContain("PageShell");
   });
+
+  it("handles course load failures without infinite loading", () => {
+    const detailSource = readFileSync(resolve("src/app/[locale]/courses/[slug]/page.tsx"), "utf8");
+
+    expect(detailSource).toContain("courseLoadError");
+    expect(detailSource).toContain("PremiumEmptyState");
+    expect(detailSource).toContain("tc(\"error\")");
+  });
 });

@@ -33,4 +33,18 @@ describe("UI V4 lesson surfaces", () => {
     expect(lessonClientSource).toContain("lesson-prose");
     expect(lessonClientSource).toContain("lesson-code-panel");
   });
+
+  it("prevents repeated auto-enrollment retries after a failure", () => {
+    const lessonClientSource = readFileSync(resolve("src/components/lessons/LessonPageClient.tsx"), "utf8");
+
+    expect(lessonClientSource).toContain("hasAttemptedAutoEnroll");
+    expect(lessonClientSource).toContain("setHasAttemptedAutoEnroll(true)");
+  });
+
+  it("shows a user-facing error when lesson completion request fails", () => {
+    const lessonClientSource = readFileSync(resolve("src/components/lessons/LessonPageClient.tsx"), "utf8");
+
+    expect(lessonClientSource).toContain("Could not mark lesson as complete");
+    expect(lessonClientSource).toContain("toast.error");
+  });
 });

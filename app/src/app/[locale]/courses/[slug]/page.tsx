@@ -54,6 +54,7 @@ export default function CourseDetailPage() {
 
   const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [courseLoadError, setCourseLoadError] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [isEnrolling, setIsEnrolling] = useState(false);
 
@@ -69,13 +70,19 @@ export default function CourseDetailPage() {
         if (res.ok) {
           const data = (await res.json()) as { course: Course };
           setCourse(data.course);
+          setCourseLoadError(false);
 
           if (data.course.modules.length > 0) {
             setExpandedModules(new Set([data.course.modules[0].id]));
           }
+        } else {
+          setCourse(null);
+          setCourseLoadError(true);
         }
       } catch (err) {
         console.error("Failed to fetch course:", err);
+        setCourse(null);
+        setCourseLoadError(true);
       } finally {
         setIsLoading(false);
       }
@@ -98,7 +105,8 @@ export default function CourseDetailPage() {
 
   const handleEnroll = useCallback(async () => {
     if (!isAuthenticated) {
-      router.push("/auth/signin");
+      const callbackUrl = `/courses/${params.slug}`;
+      router.push(`/${locale}/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       return;
     }
 
@@ -145,6 +153,7 @@ export default function CourseDetailPage() {
     connected,
     course,
     isAuthenticated,
+    locale,
     params.slug,
     publicKey,
     refreshProgress,
@@ -186,7 +195,7 @@ export default function CourseDetailPage() {
     [course]
   );
 
-  if (isLoading || !course) {
+  if (isLoading) {
     return (
       <PageShell
         hero={
@@ -208,6 +217,39 @@ export default function CourseDetailPage() {
         <div className="flex min-h-[20rem] items-center justify-center rounded-[1.5rem] border border-border/70 bg-card/80">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
+      </PageShell>
+    );
+  }
+
+  if (!course) {
+    return (
+      <PageShell
+        hero={
+          <PageHeader
+            badge={
+              <Badge
+                variant="outline"
+                className="w-fit border-border/70 bg-muted/40 text-xs uppercase tracking-[0.22em] text-muted-foreground"
+              >
+                {t("title")}
+              </Badge>
+            }
+            icon={<BookOpen className="h-5 w-5" />}
+            title={t("subtitle")}
+            description={t("searchPlaceholder")}
+          />
+        }
+      >
+        <PremiumEmptyState
+          icon={BookOpen}
+          title={tc("error")}
+          description={courseLoadError ? tc("errorSupportMessage") : tc("noResults")}
+          action={
+            <Button type="button" variant="outline" onClick={() => router.refresh()}>
+              {tc("retry")}
+            </Button>
+          }
+        />
       </PageShell>
     );
   }
