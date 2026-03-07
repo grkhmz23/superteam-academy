@@ -3,8 +3,8 @@ import { test, expect } from "@playwright/test";
 test.describe("Landing Page", () => {
   test("renders hero and navigation", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("header")).toBeVisible();
-    await expect(page.getByRole("link", { name: /courses/i })).toBeVisible();
+    await expect(page.getByText(/active workspace/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Courses", exact: true }).first()).toBeVisible();
     // Hero content
     await expect(page.locator("h1")).toBeVisible();
     // Footer
@@ -13,7 +13,7 @@ test.describe("Landing Page", () => {
 
   test("CTA buttons navigate to courses", async ({ page }) => {
     await page.goto("/");
-    const coursesLink = page.getByRole("link", { name: /start learning|explore courses/i }).first();
+    const coursesLink = page.getByRole("link", { name: /start learning free/i });
     await coursesLink.click();
     await expect(page).toHaveURL(/\/courses/);
   });
@@ -56,18 +56,18 @@ test.describe("Course Detail", () => {
   test("expandable module accordion works", async ({ page }) => {
     await page.goto("/courses/solana-fundamentals");
     // First module should be expanded by default
-    const lessonLink = page.getByText("What is Solana?");
+    const lessonLink = page.getByRole("link", { name: /solana mental model/i });
     await expect(lessonLink).toBeVisible();
   });
 });
 
 test.describe("Lesson View", () => {
   test("renders split layout with editor", async ({ page }) => {
-    await page.goto("/courses/solana-fundamentals/lessons/les-3");
+    await page.goto("/courses/solana-fundamentals/lessons/build-sol-transfer-transaction");
     // Content should be visible
-    await expect(page.getByText("Your First Solana Transaction")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /build a sol transfer transaction/i }).first()).toBeVisible();
     // Run button should be visible
-    await expect(page.getByRole("button", { name: /run code|executar|ejecutar/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /run tests/i })).toBeVisible();
   });
 });
 
@@ -107,14 +107,15 @@ test.describe("Leaderboard", () => {
   test("renders with timeframe filters", async ({ page }) => {
     await page.goto("/leaderboard");
     await expect(page.locator("h1")).toBeVisible();
-    // Timeframe buttons should be visible
-    await expect(page.getByRole("button", { name: /all time|geral|general/i })).toBeVisible();
+    // Timeframe tabs should be visible
+    await expect(page.getByRole("tab", { name: /all time|histórico/i })).toBeVisible();
   });
 });
 
 test.describe("Settings", () => {
   test("renders settings form", async ({ page }) => {
     await page.goto("/settings");
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page).toHaveURL(/\/auth\/signin\?callbackUrl=%2Fsettings/);
+    await expect(page.getByText(/sign in to superteam academy/i)).toBeVisible();
   });
 });

@@ -1,16 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { Command, Flame, Hexagon, Orbit, Sparkles } from "lucide-react";
+import { Command, Flame, Hexagon, Moon, Orbit, Sparkles, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "@/lib/i18n/navigation";
 import { useStreak } from "@/lib/hooks/use-streak";
 import { useXP } from "@/lib/hooks/use-xp";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "./language-selector";
 import { getPageLabelKey } from "@/components/layout/navigation";
 import { WalletButton } from "@/components/auth/WalletButton";
+import { useTheme } from "next-themes";
 
 function resolvePageLabel(
   pathname: string,
@@ -42,6 +44,7 @@ export function AcademyTopBar() {
   const pathname = usePathname();
   const { streak } = useStreak();
   const { level } = useXP();
+  const { resolvedTheme, setTheme } = useTheme();
 
   const labels = useMemo(
     () => ({
@@ -67,6 +70,7 @@ export function AcademyTopBar() {
     () => resolvePageLabel(pathname, labels, tNav("home")),
     [labels, pathname, tNav]
   );
+  const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/50 bg-background/60 px-4 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/45 md:px-6 lg:px-8">
@@ -90,6 +94,21 @@ export function AcademyTopBar() {
             buttonClassName="chrome-pill chrome-pill-interactive min-w-[7.5rem] justify-between border-border/70 bg-card/90 px-3 py-2 focus-visible:ring-2 focus-visible:ring-ring/70"
             panelClassName="rounded-2xl border-border/70 bg-popover/95 shadow-xl backdrop-blur-xl"
           />
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={tNav("theme")}
+            className="chrome-pill chrome-pill-interactive h-11 w-11 border border-border/70 bg-card/90 text-foreground"
+            onClick={() => setTheme(nextTheme)}
+          >
+            {resolvedTheme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
 
           <TopBarPill className="gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
             <Orbit className="h-3.5 w-3.5 text-primary" />

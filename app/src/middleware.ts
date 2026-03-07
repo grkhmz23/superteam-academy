@@ -45,13 +45,16 @@ function getConnectSrcOrigins(): string[] {
 }
 
 export function buildCsp(pathname: string): string {
+  const isDevelopment = process.env.NODE_ENV !== "production";
   const isEditorRoute =
     pathname.includes("/playground") ||
     pathname.includes("/devlab") ||
     /\/courses\/[^/]+\/lessons\//.test(pathname);
   const connectSrc = getConnectSrcOrigins();
 
-  const scriptSrc = isEditorRoute
+  const allowEval = isDevelopment || isEditorRoute;
+
+  const scriptSrc = allowEval
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://*.i.posthog.com"
     : "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.i.posthog.com";
   const workerSrc = isEditorRoute ? "worker-src 'self' blob:" : "worker-src 'self'";

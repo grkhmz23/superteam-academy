@@ -28,4 +28,15 @@ describe("UI V4 chrome system", () => {
     expect(topbarSource).toContain("WalletButton");
     expect(topbarSource).not.toContain("bg-black/20");
   });
+
+  it("includes a global theme toggle in the topbar chrome", () => {
+    const topbarSource = readFileSync(
+      resolve("src/components/layout/academy-topbar.tsx"),
+      "utf8"
+    );
+
+    expect(topbarSource).toContain("useTheme");
+    expect(topbarSource).toContain('aria-label={tNav("theme")}');
+    expect(topbarSource).toContain("setTheme");
+  });
 });

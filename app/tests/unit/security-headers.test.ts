@@ -28,7 +28,9 @@ const securityHeaders = [
 function getCspHeader(isDev: boolean): string {
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+    isDev
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com"
+      : "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "worker-src 'self'",
     "img-src 'self' blob: data: https://cdn.sanity.io https://lh3.googleusercontent.com https://avatars.githubusercontent.com",
@@ -95,8 +97,13 @@ describe("Security Headers", () => {
       expect(csp).toContain("object-src 'none'");
     });
 
-    it("should not allow unsafe-eval in global CSP", () => {
+    it("should allow unsafe-eval in development for the Next.js runtime", () => {
       const csp = getCspHeader(true);
+      expect(csp).toContain("'unsafe-eval'");
+    });
+
+    it("should not allow unsafe-eval in production", () => {
+      const csp = getCspHeader(false);
       expect(csp).not.toContain("'unsafe-eval'");
     });
 

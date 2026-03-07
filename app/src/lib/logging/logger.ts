@@ -1,6 +1,5 @@
 import pino from "pino";
 import type { Logger as PinoLogger } from "pino";
-import { isDevelopment } from "@/lib/env";
 
 /**
  * Request context for correlation
@@ -46,27 +45,16 @@ const sensitiveFields = [
 ];
 
 /**
- * Create a Pino logger instance
+ * Build logger options without worker-thread transports so Next.js server
+ * bundles can log safely in development and production.
  */
-function createLogger(): PinoLogger {
-  const isDev = isDevelopment();
-  
-  // In development, use pretty printing
-  // In production, use JSON format for structured logging
-  const transport = isDev
-    ? {
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-          translateTime: "SYS:standard",
-          ignore: "pid,hostname",
-        },
-      }
-    : undefined;
+export function createLoggerOptions(
+  nodeEnv: string = process.env.NODE_ENV || "development"
+): pino.LoggerOptions {
+  const isDev = nodeEnv === "development";
 
-  return pino({
+  return {
     level: process.env.LOG_LEVEL || "info",
-    transport,
     redact: {
       paths: sensitiveFields,
       remove: true,
@@ -79,7 +67,14 @@ function createLogger(): PinoLogger {
       level: (label: string) => ({ level: label }),
     },
     timestamp: pino.stdTimeFunctions.isoTime,
-  });
+  };
+}
+
+/**
+ * Create a Pino logger instance
+ */
+function createLogger(): PinoLogger {
+  return pino(createLoggerOptions());
 }
 
 // Singleton logger instance

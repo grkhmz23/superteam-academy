@@ -2,19 +2,22 @@ import { describe, expect, it } from "vitest";
 import { buildCsp } from "@/middleware";
 
 describe("middleware CSP routing", () => {
-  it("uses strict CSP on non-editor routes", () => {
+  it("allows Next.js dev runtime on non-editor routes during development", () => {
+    process.env.NODE_ENV = "development";
     const csp = buildCsp("/en/dashboard");
-    expect(csp).not.toContain("'unsafe-eval'");
+    expect(csp).toContain("'unsafe-eval'");
     expect(csp).toContain("worker-src 'self'");
   });
 
   it("uses relaxed CSP on playground route for Monaco", () => {
+    process.env.NODE_ENV = "development";
     const csp = buildCsp("/en/playground");
     expect(csp).toContain("'unsafe-eval'");
     expect(csp).toContain("worker-src 'self' blob:");
   });
 
   it("allows the playground shell to load analytics and Google-hosted font assets", () => {
+    process.env.NODE_ENV = "development";
     const csp = buildCsp("/en/playground");
 
     expect(csp).toContain("https://us.i.posthog.com");
@@ -26,12 +29,14 @@ describe("middleware CSP routing", () => {
   });
 
   it("allows Sentry ingest when a browser DSN is configured", () => {
+    process.env.NODE_ENV = "production";
     process.env.NEXT_PUBLIC_SENTRY_DSN =
       "https://public@example.ingest.de.sentry.io/123456";
 
     const csp = buildCsp("/en/components");
 
     expect(csp).toContain("https://example.ingest.de.sentry.io");
+    expect(csp).not.toContain("'unsafe-eval'");
 
     delete process.env.NEXT_PUBLIC_SENTRY_DSN;
   });

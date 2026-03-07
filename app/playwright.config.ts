@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const e2eServerEnv =
+  "NEXTAUTH_SECRET=test-nextauth-secret-32-bytes-minimum NEXTAUTH_URL=http://localhost:3000";
+
 export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: true,
@@ -18,9 +21,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev",
+    command: `${e2eServerEnv} pnpm build && ${e2eServerEnv} pnpm start`,
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 300_000,
   },
 });
